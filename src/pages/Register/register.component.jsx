@@ -6,7 +6,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faTimes, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 
 import '../Register/register.styles.scss'
+import axios from "../../Api/axios";
 
+const REGISTER_URL = '/register'
 
 const USER_REGEX = /^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/;
 const PWD_REGEX = /^(?=.*[a-zA-Z])(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/;
@@ -61,14 +63,42 @@ const Register = () => {
         setErrMsg('')
     }
 
+    const createSuccess = () => {
+        setUser('')
+        setPwd('')
+        setMatchPwd('')
+        setErrMsg('Successfully created an account')
+        setTimeout(clearMessage, 5000) 
+    }
+
     const submitForm = (e) => {
         e.preventDefault()
 
         if(validName && validPwd && validMatchPwd){
-            console.log(user)
-            setSuccess(true)
-            setErrMsg('Successfully created an account')
-            setTimeout(clearMessage, 5000) 
+            try{
+                const response = await axios.post(REGISTER_URL,
+                    JSON.stringify({user, pwd}),
+                    {
+                        headers: {'Content-type': 'application/json'},
+                        withCredentials: true
+                    }
+                )
+                console.log(response)
+                setSuccess(true)
+                createSuccess();
+            }
+            catch(er){
+                if(!er?.response){
+                    setErrMsg('Server error has occured, please check your internet connection and try again')
+                }
+                else if(er.response?.status === '409'){
+                    setErrMsg('User name is already taken')
+                }
+                else{
+                    setErrMsg('something went wrong')
+                }
+            }
+            
         }
         else{
 
